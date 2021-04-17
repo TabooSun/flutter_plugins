@@ -10,11 +10,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.hardware.display.DisplayManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebStorage;
@@ -87,6 +89,24 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
 
 			return true;
 		}
+
+		@Override
+		public boolean onShowFileChooser(
+				WebView webView,
+				ValueCallback<Uri[]> filePathCallback,
+				FileChooserParams fileChooserParams) {
+			// info as of 2021-03-08:
+			// don't use fileChooserParams.getTitle() as it is (always? on Mi 9T Pro Android 10 at least) null
+			// don't use fileChooserParams.isCaptureEnabled() as it is (always? on Mi 9T Pro Android 10 at least) false, even when the file upload allows images or any file
+			final Context context = webView.getContext();
+			final boolean allowMultipleFiles =
+					fileChooserParams.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE;
+			new FileChooserLauncher(
+					context, allowMultipleFiles, filePathCallback, fileChooserParams.getAcceptTypes())
+					.start();
+			return true;
+		}
+
 
 		@SuppressLint("SourceLockedOrientationActivity")
 		@Override
